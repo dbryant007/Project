@@ -67,15 +67,17 @@ CREATE TABLE inventory (
 );
 
 CREATE TABLE borrowedItem (
-	borrowDate		DATETIME2 NOT NULL PRIMARY KEY,
+	borrowDate		DATETIME2 NOT NULL,
 	returnDate		DATETIME2 NULL,
 	borrowerID		INT NOT NULL REFERENCES borrower(borrowerID),
 	itemID			INT NOT NULL REFERENCES inventory(itemID),
+	PRIMARY KEY		(borrowerID, itemID)
 );
 
 CREATE TABLE artistitem (
 	artistID		INT NOT NULL REFERENCES artist(artistID),
-	itemID			INT NOT NULL REFERENCES inventory(itemID)
+	itemID			INT NOT NULL REFERENCES inventory(itemID),
+	PRIMARY KEY		(artistID, itemID)
 );
 
 
