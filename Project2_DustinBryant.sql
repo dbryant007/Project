@@ -326,4 +326,3 @@ VALUES
 SELECT borrowerID, itemID, borrowDate, returnDate
 FROM borrowedItem
 WHERE returnDate IS NULL;
-
