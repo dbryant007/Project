@@ -3,7 +3,10 @@
 /*	Date		Programmer			Description										*/
 /* --------- ---------------- ------------------------------------------------------*/
 /* 10/9/20		Dustin Bryant	Intial implementation of the disk inventory db.		*/
-/* 10/16/20		Dustin Bryant	                                                                                 */
+/* 10/16/20		Dustin Bryant	Inserted data into all tables						*/
+/*								Added borrowDate to Primary Key on borrowedItem table */
+/*								Changed borrowerLName to Null from Not Null on borrower table */
+/*								Changed artistLName to Null from Not Null on artist table       */
 /*                                                                                  */
 /************************************************************************************/
 
