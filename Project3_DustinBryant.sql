@@ -7,6 +7,9 @@
 /*								Added borrowDate to Primary Key on borrowedItem table */
 /*								Changed borrowerLName to Null from Not Null on borrower table */
 /*								Changed artistLName to Null from Not Null on artist table       */
+/* 10/22/20     Dustin Bryant	                                                    */
+/*                                                                                  */
+/*                                                                                  */
 /*                                                                                  */
 /************************************************************************************/
 
@@ -326,3 +329,111 @@ VALUES
 SELECT borrowerID, itemID, borrowDate, returnDate
 FROM borrowedItem
 WHERE returnDate IS NULL;
+
+--Project 4
+--3. Show the disks in your database and any associated Individual artists only.
+--Sample Output:
+--Disk Name Release Date Artist First Name Artist Last Name
+--Believe 01/22/1988 Cher
+--Home 11/09/2004 Chris Daughtry
+--Jagged Little Pill 04/09/1995 Alanis Morrisette
+--Blizzard of Oz 09/281981 Ozzy Osborne
+--No More Tears 11/11/1991 Ozzy Osborne
+--Red 09/242011 Taylor Swift
+
+SELECT itemName AS 'Disk Name', CONVERT(varchar, releaseDate, 101) AS 'Release Date', artistFName AS 'Artist First Name', COALESCE(artistLName, ' ') AS 'Artist Last Name'
+FROM artist
+	JOIN artistItem
+		ON artistItem.artistID = artist.artistID
+	JOIN inventory
+		ON inventory.itemID = artistItem.itemID
+WHERE artistTypeID = 1
+ORDER BY itemName;
+GO
+
+--4. Create a view called View_Individual_Artist that shows the artists’ names and not group names. Include the artist id in the view definition but do not display the id in your output.
+--Sample Output:
+--FirstName LastName
+--Cher
+--Chris Daughtry
+--Alanis Morrisette
+--Ozzy Osbourne
+--Taylor Swift
+
+DROP VIEW IF EXISTS View_Individual_Artist;
+GO
+CREATE VIEW View_Individual_Artist AS
+	SELECT artistID, artistFName, artistLName, artistTypeID
+	FROM artist
+	WHERE artistTypeID = 1
+	GO
+
+SELECT artistFName AS 'Artist First Name', COALESCE(artistLName, ' ') AS 'Artist Last Name'
+FROM View_Individual_Artist
+ORDER BY artistTypeID;
+
+--5.  Show the disks in your database and any associated Group artists only. Use the View_Individual_Artist view.
+--Sample Output:
+--Disk Name Release Date Group Name
+--Blender 04/09/1993 Collective Soul
+--Hints, Allegations, and Things Left Unsaid 12/12/1995 Collective Soul
+--Paranoid 05/01/1970 Black Sabbath
+--Hotel California 07/09/1985 The Eagles
+--One of These Nights 04/09/1977 The Eagles
+--The Long Run 03/031984 The Eagles
+
+SELECT itemName AS 'Disk Name', CONVERT(varchar, releaseDate, 101) AS 'Release Date', artistFName AS 'Group Name'
+FROM inventory
+JOIN artistItem
+	ON artistItem.itemID = inventory.itemID 
+JOIN artist
+	ON artist.artistID = artistItem.artistID
+WHERE artistTypeID NOT IN
+	(SELECT artistTypeID from View_Individual_Artist)
+ORDER BY itemName;
+
+--6. Show the borrowed disks and who borrowed them.
+--Sample Output:
+--First Last Disk Name Borrowed Date Returned Date
+--Jiminy Cricket Human Clay 2010-02-02 2010-03-01
+--Donald Duck Hints, Allegations, and Things Left Unsaid 2011-03-09 2011-04-11
+--Donald Duck Red 2012-01-01 NULL
+
+SELECT borrowerFName AS 'First', borrowerLName AS 'Last', itemName AS 'Disk Name', borrowDate AS 'Borrow Date', returnDate AS 'Returned Date'
+FROM borrower
+JOIN borrowedItem
+	ON borrowedItem.borrowerID = borrower.borrowerID
+JOIN inventory
+	ON inventory.itemID = borrowedItem.itemID
+WHERE itemStatusID = 2
+ORDER BY borrowDate, borrowerLName;
+
+--7. Show the number of times a disk has been borrowed.
+--Sample Output:
+--DiskId Disk Name Times Borrowed
+--2 No More Tears 4
+--3 Red 3
+--4 Jagged Little Pill 8
+
+SELECT inventory.itemID AS 'DiskId', itemName AS 'Disk Name', COUNT(*) AS 'Times Borrowed'
+FROM inventory
+	JOIN borrowedItem
+		ON borrowedItem.itemID = inventory.itemID
+GROUP BY inventory.itemID, itemName
+ORDER BY inventory.itemID;
+
+--8. Show the disks outstanding or on-loan and who has each disk.
+--Sample Output:
+--Disk Name Borrowed Returned Last Name
+--Hints, Allegations, and Things Left Unsaid 2012-04-02 NULL Fudd
+--Jagged Little Pill 2012-04-02 NULL Fudd
+
+SELECT itemName AS 'Disk Name', borrowDate AS 'Borrowed', returnDate AS 'Returned', borrowerLName AS 'Last Name'
+FROM inventory
+JOIN borrowedItem
+	ON borrowedItem.itemID = inventory.itemID
+JOIN borrower
+	ON borrower.borrowerID = borrowedItem.borrowerID
+WHERE returnDate IS NULL
+ORDER BY itemName;
+
