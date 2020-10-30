@@ -6,9 +6,9 @@
 /* 10/16/20		Dustin Bryant	Inserted data into all tables						*/
 /*								Added borrowDate to Primary Key on borrowedItem table */
 /*								Changed borrowerLName to Null from Not Null on borrower table */
-/*								Changed artistLName to Null from Not Null on artist table       */
-/* 10/22/20     Dustin Bryant	                                                    */
-/*                                                                                  */
+/*								Changed artistLName to Null from Not Null on artist table */
+/* 10/22/20     Dustin Bryant	Added Project 4 Select Statements                   */
+/* 10/28/20		Dustin Bryant	Added Project 5 Stored Procedures                   */
 /*                                                                                  */
 /*                                                                                  */
 /************************************************************************************/
@@ -92,6 +92,7 @@ CREATE TABLE artistItem (
 );
 
 /******************** Project 3 *********************************************/
+
 --Inserts for artist_type - See CH7 slide 12 or 13
 INSERT INTO artisttype 
 	(description)
@@ -330,7 +331,8 @@ SELECT borrowerID, itemID, borrowDate, returnDate
 FROM borrowedItem
 WHERE returnDate IS NULL;
 
---Project 4
+/******************** Project 4 *********************************************/
+
 --3. Show the disks in your database and any associated Individual artists only.
 --Sample Output:
 --Disk Name Release Date Artist First Name Artist Last Name
@@ -436,4 +438,251 @@ JOIN borrower
 	ON borrower.borrowerID = borrowedItem.borrowerID
 WHERE returnDate IS NULL
 ORDER BY itemName;
+GO
 
+/******************** Project 5 *********************************************/
+
+--1. Document each SQL statement – what it is supposed to do. Stored procs & execute statements.
+--2. Create Insert, Update, and Delete stored procedures for the artist table. Update procedure accepts input parameters for all columns. Insert accepts all columns as input parameters except for identity fields. Delete accepts a primary key value for delete.
+
+--create artist table insert stored procedure
+DROP PROC IF EXISTS sp_ins_artist
+GO
+CREATE PROC sp_ins_artist
+	@artistFName nvarchar(60), @artistLName nvarchar(60), @artistTypeID int
+AS
+	BEGIN TRY
+		INSERT artist
+           (artistFName
+           ,artistLName
+           ,artistTypeID)
+		VALUES
+           (@artistFName
+           ,@artistLName
+           ,@artistTypeID)
+	END TRY
+	BEGIN CATCH
+		PRINT 'An error occured.';
+		PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+	END CATCH
+GO
+GRANT EXECUTE ON sp_ins_artist TO diskUserdb;
+GO
+EXEC sp_ins_artist 'Test FName', 'Test LName', 1; --test to see if stored procedure is working
+GO
+EXEC sp_ins_artist 'Test FName', NULL, 1; --test to see if a NULL last name is allowed
+GO
+EXEC sp_ins_artist 'Test FName', 'Test LName', NULL; --test to see if the TRY/CATCH is working
+GO
+
+--create artist table update stored procedure
+DROP PROC IF EXISTS sp_upd_artist
+GO
+CREATE PROC sp_upd_artist
+	@artistID int, @artistFName nvarchar(60), @artistLName nvarchar(60), @artistTypeID int
+AS
+	BEGIN TRY
+		UPDATE artist
+        SET
+           artistFName = @artistFName
+           ,artistLName = @artistLName
+           ,artistTypeID = @artistTypeID
+		WHERE artistID = @artistID
+	END TRY
+	BEGIN CATCH
+		PRINT 'An error occured.';
+		PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+	END CATCH
+GO
+GRANT EXECUTE ON sp_upd_artist TO diskUserdb;
+GO
+EXEC sp_upd_artist 22, 'Test FName', 'Updated Test LName', 1; --test to see if stored procedure is working
+GO
+EXEC sp_upd_artist 22, 'Test FName', 'Updated Test LName', NULL; --test to see if the TRY/CATCH is working
+GO
+
+--create artist table delete stored procedure
+DROP PROC IF EXISTS sp_del_artist
+GO
+CREATE PROC sp_del_artist
+	@artistID int
+AS
+	BEGIN TRY
+		DELETE FROM artist
+			WHERE artistID = @artistID;
+	END TRY
+	BEGIN CATCH
+		PRINT 'An error occured.';
+		PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+	END CATCH
+GO
+GRANT EXECUTE ON sp_del_artist TO diskUserdb;
+GO
+EXEC sp_del_artist 24 --test to see if stored procedure is working. change the number to the artistID number you wish to delete
+GO
+EXEC sp_del_artist 25
+GO
+--3. Create Insert, Update, and Delete stored procedures for the borrower table. Update procedure accepts input parameters for all columns. Insert accepts all columns as input parameters except for identity fields. Delete accepts a primary key value for delete.
+
+--create borrower table insert stored procedure
+DROP PROC IF EXISTS sp_ins_borrower
+GO
+CREATE PROC sp_ins_borrower
+	@borrowerFName nvarchar(60), @borrowerLName nvarchar(60), @borrowerPhone VARCHAR(15)
+AS
+	BEGIN TRY
+		INSERT borrower
+           (borrowerFName
+           ,borrowerLName
+           ,borrowerPhone)
+		VALUES
+           (@borrowerFName
+           ,@borrowerLName
+           ,@borrowerPhone)
+	END TRY
+	BEGIN CATCH
+		PRINT 'An error occured.';
+		PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+	END CATCH
+GO
+GRANT EXECUTE ON sp_ins_borrower TO diskUserdb;
+GO
+EXEC sp_ins_borrower 'Test FName', 'Test LName', '208-987-6543'; --test to see if stored procedure is working
+GO
+EXEC sp_ins_borrower 'Test FName', NULL, '208-567-1234';  --test to see if a NULL last name is allowed
+GO
+EXEC sp_ins_borrower 'Test FName', 'Test LName', NULL;  --test to see if the TRY/CATCH is working
+GO
+
+--create borrower table update stored procedure
+DROP PROC IF EXISTS sp_upd_borrower
+GO
+CREATE PROC sp_upd_borrower
+	@borrowerID int, @borrowerFName nvarchar(60), @borrowerLName nvarchar(60), @borrowerPhone VARCHAR(15)
+AS
+	BEGIN TRY
+		UPDATE borrower
+        SET
+           borrowerFName = @borrowerFName
+           ,borrowerLName = @borrowerLName
+           ,borrowerPhone = @borrowerPhone
+		WHERE borrowerID = @borrowerID
+	END TRY
+	BEGIN CATCH
+		PRINT 'An error occured.';
+		PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+	END CATCH
+GO
+GRANT EXECUTE ON sp_upd_borrower TO diskUserdb;
+GO
+EXEC sp_upd_borrower 24, 'Test FName', 'Updated Test LName', '208-123-4567'; --test to see if stored procedure is working
+GO
+EXEC sp_upd_borrower 21, 'Test FName', 'Updated Test LName', NULL; --test to see if the TRY/CATCH is working
+GO
+
+--create borrower table delete stored procedure
+DROP PROC IF EXISTS sp_del_borrower
+GO
+CREATE PROC sp_del_borrower
+	@borrowerID int
+AS
+	BEGIN TRY
+		DELETE FROM borrower
+			WHERE borrowerID = @borrowerID;
+	END TRY
+	BEGIN CATCH
+		PRINT 'An error occured.';
+		PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+	END CATCH
+GO
+GRANT EXECUTE ON sp_del_borrower TO diskUserdb;
+GO
+EXEC sp_del_borrower 25 --test to see if stored procedure is working. change the number to the borrowerID number you wish to delete
+GO
+
+--4. Create Insert, Update, and Delete stored procedures for the disk table. Update procedure accepts input parameters for all columns. Insert accepts all columns as input parameters except for identity fields. Delete accepts a primary key value for delete.
+
+--create inventory table insert stored procedure
+DROP PROC IF EXISTS sp_ins_inventory
+GO
+CREATE PROC sp_ins_inventory
+	@itemName nvarchar(60), @releaseDate date, @genreID int, @itemStatusID int, @itemTypeID int
+AS
+	BEGIN TRY
+		INSERT inventory
+           (itemName
+           ,releaseDate
+           ,genreID
+           ,itemStatusID
+           ,itemTypeID)
+		VALUES
+           (@itemName
+           ,@releaseDate
+           ,@genreID
+           ,@itemStatusID
+           ,@itemTypeID)
+	END TRY
+	BEGIN CATCH
+		PRINT 'An error occured.';
+		PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+	END CATCH
+GO
+GRANT EXECUTE ON sp_ins_inventory TO diskUserdb;
+GO
+EXEC sp_ins_inventory 'Test Disk', '10/10/2020', 4, 1, 1; --test to see if stored procedure is working
+GO
+EXEC sp_ins_inventory 'Test Disk', '10/10/2020', 4, 1, NULL; --test to see if the TRY/CATCH is working
+GO
+
+--create inventory table update stored procedure
+DROP PROC IF EXISTS sp_upd_inventory
+GO
+CREATE PROC sp_upd_inventory
+	@itemID INT, @itemName nvarchar(60), @releaseDate date, @genreID int, @itemStatusID int, @itemTypeID int
+AS
+	BEGIN TRY
+		UPDATE inventory
+        SET
+           itemName = @itemName
+           ,releaseDate = @releaseDate
+           ,genreID = @genreID
+           ,itemStatusID = @itemStatusID
+           ,itemTypeID = @itemTypeID
+		WHERE itemID = @itemID
+	END TRY
+	BEGIN CATCH
+		PRINT 'An error occured.';
+		PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+	END CATCH
+GO
+GRANT EXECUTE ON sp_upd_inventory TO diskUserdb;
+GO
+EXEC sp_upd_inventory 27, 'Test Disk', '2/2/2020', 4, 1, 1; --test to see if stored procedure is working
+GO
+EXEC sp_upd_inventory 27, 'Test Disk', '2/2/2020', 4, 1, NULL; --test to see if the TRY/CATCH is working
+GO
+
+--create inventory table delete stored procedure
+DROP PROC IF EXISTS sp_del_inventory
+GO
+CREATE PROC sp_del_inventory
+	@itemID int
+AS
+	BEGIN TRY
+		DELETE FROM inventory
+			WHERE itemID = @itemID;
+	END TRY
+	BEGIN CATCH
+		PRINT 'An error occured.';
+		PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+	END CATCH
+GO
+GRANT EXECUTE ON sp_del_inventory TO diskUserdb;
+GO
+EXEC sp_del_inventory 27 --test to see if stored procedure is working. change the number to the itemID number you wish to delete
+GO
+
+--5. Script file includes all required ‘GO’ statements. Done
+--6. Stored procedures contain excellent error processing (try-catch). Done
+--7. Give the non-sa user from Project 2 execute permission to all stored procedures. Done
+--8. Script file includes all execute statements needed to invoke each stored procedure. Done
